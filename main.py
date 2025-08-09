@@ -2,6 +2,7 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 from os import path
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 menu_options = ["Add Transaction", "List Transactions", "Summarize budget", "Exit"]
 
@@ -9,7 +10,6 @@ def initialize_csv():
     if not path.exists("budget.csv"):
         df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
         df.to_csv("budget.csv", index=False)
-
 
 def add_transaction():
     type_ = input("Enter transaction type (Income or Expense): ")
