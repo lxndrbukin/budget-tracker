@@ -28,33 +28,36 @@ def add_transaction():
     )
     print("Transaction added successfully!")
 
+def print_data_by(selection, data_frame):
+    selected = (
+        data_frame.assign(Category=lambda d: d[selection].astype("string").str.strip())
+        .dropna(subset=[selection])
+        [selection].drop_duplicates()
+        .sort_values()
+        .tolist()
+    )
+    print("Select an option:")
+    for i, sel in enumerate(selected):
+        print(f"{i + 1}. {sel}")
+    choice = int(input(f"Select a {selection.lower()}: "))
+    category = str(selected[choice - 1])
+    mask = data_frame[selection].str.casefold() == category.casefold()
+    out = data_frame.loc[mask].copy()
+    print(out)
+
 def list_transactions():
-    list_options = ["All", "By category", "By amount"]
+    df = pd.read_csv("budget.csv")
+    list_options = ["All", "By type", "By category"]
     print("List types:")
     for i, option in enumerate(list_options):
         print(f"{i + 1}. {option}")
     choice = int(input("Choose an option: "))
     if choice == 1:
-        df = pd.read_csv('budget.csv', parse_dates=['Date'])
         print(df.sort_values("Date").dropna())
     elif choice == 2:
-        df = pd.read_csv('budget.csv')
-        cats = (
-            df.assign(Category=lambda d: d["Category"].astype("string").str.strip())
-            .dropna(subset=["Category"])
-            ["Category"].drop_duplicates()
-            .sort_values()
-            .tolist()
-        )
-        print("Categories:")
-        for i, cat in enumerate(cats):
-            print(f"{i + 1}. {cat}")
-        cat_choice = int(input("Select a category: "))
-        category = str(cats[cat_choice - 1])
-        mask = df["Category"].str.casefold() == category.casefold()
-        out = df.loc[mask].copy()
-        print(out)
-
+        print_data_by("Type", df)
+    elif choice == 3:
+        print_data_by("Category", df)
 
 def summarize_budget():
     df = pd.read_csv("budget.csv")
