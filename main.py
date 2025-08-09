@@ -13,10 +13,17 @@ def add_transaction():
     category = input("Enter the category (e.g. Salary, Entertainment, Freelance, Groceries): ")
     description = input("Enter transaction description (e.g. Monthly paycheck): ")
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    df = pd.read_csv('budget.csv')
-    new_transaction = pd.DataFrame([[date, type_, amount, category, description]], columns=['Date', 'Type', 'Amount', 'Category', 'Description'])
-    df = pd.concat([df, new_transaction])
-    df.to_csv('budget.csv')
+    new_transaction = pd.DataFrame(
+        [[date, type_, amount, category, description]],
+        columns=['Date', 'Type', 'Amount', 'Category', 'Description']
+    )
+    new_transaction.to_csv(
+        'budget.csv',
+        mode='a',
+        index=False,
+        header=not path.exists('budget.csv') or path.getsize('budget.csv') == 0
+    )
+    print("Transaction added successfully!")
 
 def summarize_budget():
     df = pd.read_csv('budget.csv')
@@ -26,6 +33,6 @@ def summarize_budget():
 while True:
     initialize_csv()
     try:
-        pass
+        add_transaction()
     except ValueError:
         pass
