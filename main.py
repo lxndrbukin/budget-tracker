@@ -1,8 +1,9 @@
 import pandas as pd
+from pandas.errors import EmptyDataError
 from os import path
 from datetime import datetime
 
-menu_options = ["Add Transaction", "List Transactions", "Exit"]
+menu_options = ["Add Transaction", "List Transactions", "Summarize budget", "Exit"]
 
 def initialize_csv():
     if not path.exists("budget.csv"):
@@ -46,7 +47,11 @@ def print_data_by(selection, data_frame):
     print(out)
 
 def list_transactions():
-    df = pd.read_csv("budget.csv")
+    try:
+        df = pd.read_csv("budget.csv")
+    except (FileNotFoundError, EmptyDataError):
+        print("No transactions yet.")
+        raise SystemExit
     list_options = ["All", "By type", "By category"]
     print("List types:")
     for i, option in enumerate(list_options):
@@ -62,7 +67,7 @@ def list_transactions():
 def summarize_budget():
     df = pd.read_csv("budget.csv")
     summary = df.groupby("Category")["Amount"].sum()
-    print(summary)
+    print(summary.to_string(name=False, dtype=False))
 
 def main():
     initialize_csv()
@@ -77,12 +82,17 @@ def main():
             elif choice == 2:
                 list_transactions()
             elif choice == 3:
+                summarize_budget()
+            elif choice == 4:
                 print("Program closed.")
                 break
             else:
                 print("Invalid choice, try again!")
         except KeyboardInterrupt:
             print("\nProgram stopped by the user.")
+            break
+        except SystemExit as e:
+            print(e)
             break
 
 if __name__ == "__main__":
