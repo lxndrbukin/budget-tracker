@@ -2,7 +2,7 @@ import pandas as pd
 from os import path
 from datetime import datetime
 
-menu_options = ["Add Transaction", "Exit"]
+menu_options = ["Add Transaction", "List Transactions", "Exit"]
 
 def initialize_csv():
     if not path.exists("budget.csv"):
@@ -28,6 +28,10 @@ def add_transaction():
     )
     print("Transaction added successfully!")
 
+def list_all_transactions():
+    df = pd.read_csv('budget.csv', parse_dates=['Date'])
+    print(df.sort_values("Date").dropna())
+
 def summarize_budget():
     df = pd.read_csv("budget.csv")
     summary = df.groupby("Category")["Amount"].sum()
@@ -40,10 +44,12 @@ def main():
             print("\nPersonal Budget Tracker")
             for i, option in enumerate(menu_options):
                 print(f"{i + 1}. {option}")
-            choice = input("Choose and option: ")
+            choice = int(input("Choose an option: "))
             if choice == 1:
                 add_transaction()
             elif choice == 2:
+                list_all_transactions()
+            elif choice == 3:
                 print("Program closed.")
                 break
             else:
