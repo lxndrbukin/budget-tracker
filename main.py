@@ -39,7 +39,7 @@ def main():
         try:
             print("\nPersonal Budget Tracker")
             for i, option in enumerate(menu_options):
-                print(f"{menu_options[i]}. {option}")
+                print(f"{i}. {option}")
             choice = input("Choose and option: ")
             if choice == 1:
                 add_transaction()
@@ -50,6 +50,7 @@ def main():
                 print("Invalid choice, try again!")
         except KeyboardInterrupt:
             print("\nProgram stopped by the user.")
+            break
 
 if __name__ == "__main__":
     main()
