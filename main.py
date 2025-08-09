@@ -39,7 +39,7 @@ def main():
         try:
             print("\nPersonal Budget Tracker")
             for i, option in enumerate(menu_options):
-                print(f"{i}. {option}")
+                print(f"{i + 1}. {option}")
             choice = input("Choose and option: ")
             if choice == 1:
                 add_transaction()
