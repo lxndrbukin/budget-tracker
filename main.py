@@ -28,9 +28,33 @@ def add_transaction():
     )
     print("Transaction added successfully!")
 
-def list_all_transactions():
-    df = pd.read_csv('budget.csv', parse_dates=['Date'])
-    print(df.sort_values("Date").dropna())
+def list_transactions():
+    list_options = ["All", "By category", "By amount"]
+    print("List types:")
+    for i, option in enumerate(list_options):
+        print(f"{i + 1}. {option}")
+    choice = int(input("Choose an option: "))
+    if choice == 1:
+        df = pd.read_csv('budget.csv', parse_dates=['Date'])
+        print(df.sort_values("Date").dropna())
+    elif choice == 2:
+        df = pd.read_csv('budget.csv')
+        cats = (
+            df.assign(Category=lambda d: d["Category"].astype("string").str.strip())
+            .dropna(subset=["Category"])
+            ["Category"].drop_duplicates()
+            .sort_values()
+            .tolist()
+        )
+        print("Categories:")
+        for i, cat in enumerate(cats):
+            print(f"{i + 1}. {cat}")
+        cat_choice = int(input("Select a category: "))
+        category = str(cats[cat_choice - 1])
+        mask = df["Category"].str.casefold() == category.casefold()
+        out = df.loc[mask].copy()
+        print(out)
+
 
 def summarize_budget():
     df = pd.read_csv("budget.csv")
@@ -48,7 +72,7 @@ def main():
             if choice == 1:
                 add_transaction()
             elif choice == 2:
-                list_all_transactions()
+                list_transactions()
             elif choice == 3:
                 print("Program closed.")
                 break
