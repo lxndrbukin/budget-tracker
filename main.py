@@ -4,8 +4,6 @@ from os import path
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-menu_options = ["Add Transaction", "List Transactions", "Summarize budget", "Exit"]
-
 def initialize_csv():
     if not path.exists("budget.csv"):
         df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
@@ -30,6 +28,10 @@ def add_transaction():
     print("Transaction added successfully!")
 
 def print_data_by(selection, data_frame):
+    if selection not in ("Type", "Category"):
+        print("Can only filter by 'Type' or 'Category'.")
+        return
+
     selected = (
         data_frame.assign(Category=lambda d: d[selection].astype("string").str.strip())
         .dropna(subset=[selection])
@@ -38,8 +40,8 @@ def print_data_by(selection, data_frame):
         .tolist()
     )
     print("Select an option:")
-    for i, sel in enumerate(selected):
-        print(f"{i + 1}. {sel}")
+    for i, sel in enumerate(selected, 1):
+        print(f"{i}. {sel}")
     choice = int(input(f"Select a {selection.lower()}: "))
     category = str(selected[choice - 1])
     mask = data_frame[selection].str.casefold() == category.casefold()
@@ -54,8 +56,8 @@ def list_transactions():
         raise SystemExit
     list_options = ["All", "By type", "By category"]
     print("List types:")
-    for i, option in enumerate(list_options):
-        print(f"{i + 1}. {option}")
+    for i, option in enumerate(list_options, 1):
+        print(f"{i}. {option}")
     choice = int(input("Choose an option: "))
     if choice == 1:
         print(df.sort_values("Date").dropna())
@@ -66,16 +68,18 @@ def list_transactions():
 
 def summarize_budget():
     df = pd.read_csv("budget.csv")
-    summary = df.groupby("Category")["Amount"].sum()
+    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+    summary = df.groupby("Type")["Amount"].sum()
     print(summary.to_string(name=False, dtype=False))
 
 def main():
     initialize_csv()
+    menu_options = ["Add Transaction", "List Transactions", "Summarize budget", "Exit"]
     while True:
         try:
             print("\nPersonal Budget Tracker")
-            for i, option in enumerate(menu_options):
-                print(f"{i + 1}. {option}")
+            for i, option in enumerate(menu_options, 1):
+                print(f"{i}. {option}")
             choice = int(input("Choose an option: "))
             if choice == 1:
                 add_transaction()
