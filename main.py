@@ -4,6 +4,14 @@ from os import path
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+def clean(data_frame):
+    df = data_frame.copy()
+    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    for c in ["Type","Category","Description"]:
+        df[c] = df[c].astype("string").str.strip()
+    return df
+
 def initialize_csv():
     if not path.exists("budget.csv"):
         df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
@@ -33,7 +41,7 @@ def print_data_by(selection, data_frame):
         return
 
     selected = (
-        data_frame.assign(Category=lambda d: d[selection].astype("string").str.strip())
+        clean(data_frame).assign(Category=lambda d: d[selection])
         .dropna(subset=[selection])
         [selection].drop_duplicates()
         .sort_values()
