@@ -12,6 +12,13 @@ def clean(data_frame):
         df[c] = df[c].astype("string").str.strip()
     return df
 
+def load_budget():
+    try:
+        raw = pd.read_csv("budget.csv")
+    except FileNotFoundError:
+        return pd.DataFrame(columns=["Date","Type","Amount","Category","Description"])
+    return clean(raw)
+
 def initialize_csv():
     if not path.exists("budget.csv"):
         df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
@@ -39,7 +46,6 @@ def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
         print("Can only filter by 'Type' or 'Category'.")
         return
-
     selected = (
         clean(data_frame).assign(Category=lambda d: d[selection])
         .dropna(subset=[selection])
@@ -58,7 +64,7 @@ def print_data_by(selection, data_frame):
 
 def list_transactions():
     try:
-        df = pd.read_csv("budget.csv")
+        df = load_budget()
     except (FileNotFoundError, EmptyDataError):
         print("No transactions yet.")
         raise SystemExit
@@ -74,11 +80,35 @@ def list_transactions():
     elif choice == 3:
         print_data_by("Category", df)
 
-def summarize_budget():
-    df = pd.read_csv("budget.csv")
-    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
-    summary = df.groupby("Type")["Amount"].sum()
-    print(summary.to_string(name=False, dtype=False))
+def is_expense_series(df):
+    """Boolean mask for expense rows (Type != 'income')."""
+    t = df.get("Type", pd.Series(index=df.index, dtype="string")).astype("string").str.casefold()
+    return ~t.eq("income")
+
+def summarize():
+    try:
+        df = load_budget()
+    except (FileNotFoundError, EmptyDataError):
+        print("No transactions yet.")
+        raise SystemExit
+
+    # Totals by Type
+    by_type = (df.groupby("Type", dropna=True)["Amount"].sum()
+                 .sort_values(ascending=False))
+    # Totals by Category (expenses only)
+    expenses = df.loc[is_expense_series(df)]
+    by_cat = (expenses.groupby("Category", dropna=True)["Amount"].sum()
+                .sort_values(ascending=False))
+
+    income_total = by_type.get("Income", 0.0)
+    expense_total = expenses["Amount"].sum()
+    net = income_total - expense_total
+
+    print("\nTotals by Type")
+    print(by_type.to_string())
+    print("\nTotals by Category (expenses)")
+    print(by_cat.to_string())
+    print(f"\nNet: {net:.2f}")
 
 def main():
     initialize_csv()
@@ -94,7 +124,7 @@ def main():
             elif choice == 2:
                 list_transactions()
             elif choice == 3:
-                summarize_budget()
+                summarize()
             elif choice == 4:
                 print("Program closed.")
                 break
