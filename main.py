@@ -80,10 +80,24 @@ def list_transactions():
     elif choice == 3:
         print_data_by("Category", df)
 
-def is_expense_series(df):
-    """Boolean mask for expense rows (Type != 'income')."""
+def is_expense_series():
+    df = load_budget()
     t = df.get("Type", pd.Series(index=df.index, dtype="string")).astype("string").str.casefold()
+    print(t)
     return ~t.eq("income")
+
+def expense_chart():
+    df = load_budget()
+    is_expense = df["Type"].str.casefold().ne("income")
+    by_cat = (df.loc[is_expense]
+              .groupby("Description")["Amount"]
+              .sum()
+              .sort_values(ascending=False))
+    plt.bar(by_cat.index.tolist(), by_cat.values.tolist())
+    plt.title("Expense Chart")
+    plt.xlabel("Type")
+    plt.ylabel("Amount")
+    plt.savefig("expense_chart.png")
 
 def summarize():
     try:
@@ -91,24 +105,21 @@ def summarize():
     except (FileNotFoundError, EmptyDataError):
         print("No transactions yet.")
         raise SystemExit
-
-    # Totals by Type
     by_type = (df.groupby("Type", dropna=True)["Amount"].sum()
                  .sort_values(ascending=False))
-    # Totals by Category (expenses only)
-    expenses = df.loc[is_expense_series(df)]
+    expenses = df.loc[is_expense_series()]
     by_cat = (expenses.groupby("Category", dropna=True)["Amount"].sum()
                 .sort_values(ascending=False))
-
     income_total = by_type.get("Income", 0.0)
     expense_total = expenses["Amount"].sum()
     net = income_total - expense_total
-
     print("\nTotals by Type")
     print(by_type.to_string())
     print("\nTotals by Category (expenses)")
     print(by_cat.to_string())
     print(f"\nNet: {net:.2f}")
+    expense_chart()
+    print("Expenses chart saved in your folder.")
 
 def main():
     initialize_csv()
