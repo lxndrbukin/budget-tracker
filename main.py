@@ -16,7 +16,8 @@ def load_budget():
     try:
         raw = pd.read_csv("budget.csv")
     except FileNotFoundError:
-        return pd.DataFrame(columns=["Date","Type","Amount","Category","Description"])
+        df = pd.DataFrame(columns=["Date","Type","Amount","Category","Description"])
+        return df
     return clean(raw)
 
 def initialize_csv():
@@ -41,6 +42,16 @@ def add_transaction():
         header=not path.exists("budget.csv") or path.getsize("budget.csv") == 0
     )
     print("Transaction added successfully!")
+
+def delete_transaction():
+    transac_id = int(input("Enter transaction id: "))
+    try:
+        df = pd.read_csv("budget.csv")
+        df = df.drop(transac_id)
+        df.to_csv("budget.csv", index=False)
+        print("Transaction deleted successfully!")
+    except FileNotFoundError:
+        print("Transaction or file does not exist!")
 
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
@@ -123,7 +134,7 @@ def summarize():
 
 def main():
     initialize_csv()
-    menu_options = ["Add Transaction", "List Transactions", "Summarize budget", "Exit"]
+    menu_options = ["Add Transaction", "Delete Transaction", "List Transactions", "Summarize budget", "Exit"]
     while True:
         try:
             print("\nPersonal Budget Tracker")
@@ -133,10 +144,12 @@ def main():
             if choice == 1:
                 add_transaction()
             elif choice == 2:
-                list_transactions()
+                delete_transaction()
             elif choice == 3:
-                summarize()
+                list_transactions()
             elif choice == 4:
+                summarize()
+            elif choice == 5:
                 print("Program closed.")
                 break
             else:
