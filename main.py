@@ -44,16 +44,13 @@ def add_transaction():
     print("Transaction added successfully!")
 
 def delete_transaction():
-    raw = pd.read_csv("budget.csv")
-    df = clean(raw)
     try:
-        if len(df) > 0:
-            transac_id = int(input("Enter transaction id: "))
-            df = df.drop(transac_id)
-            df.to_csv("budget.csv", index=False)
-            print("Transaction deleted successfully!")
-        else:
-            raise EmptyDataError("No transactions found!")
+        df = load_budget()
+        list_transactions()
+        t_id = int(input("Enter transaction id: "))
+        df = df.drop(t_id)
+        df.to_csv("budget.csv", index=False)
+        print(f"Transaction under ID {t_id} deleted successfully!")
     except FileNotFoundError:
         print("File does not exist!")
     except EmptyDataError as e:
@@ -79,17 +76,20 @@ def print_data_by(selection, data_frame):
     out = data_frame.loc[mask].copy()
     print(out)
 
-def list_transactions():
+def list_transactions(choice=1):
     try:
         df = load_budget()
-    except (FileNotFoundError, EmptyDataError):
-        print("No transactions yet.")
+        if len(df) > 0:
+            pass
+        else:
+            raise EmptyDataError("No transactions found!")
+    except (FileNotFoundError, EmptyDataError) as e:
+        print(e)
         raise SystemExit
     list_options = ["All", "By type", "By category"]
     print("List types:")
     for i, option in enumerate(list_options, 1):
         print(f"{i}. {option}")
-    choice = int(input("Choose an option: "))
     if choice == 1:
         print(df.sort_values("Date").dropna())
     elif choice == 2:
@@ -152,7 +152,8 @@ def main():
             elif choice == 2:
                 delete_transaction()
             elif choice == 3:
-                list_transactions()
+                choice = int(input("Choose an option: "))
+                list_transactions(choice)
             elif choice == 4:
                 summarize()
             elif choice == 5:
