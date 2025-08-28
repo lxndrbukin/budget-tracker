@@ -4,6 +4,9 @@ from os import path
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+def print_message(message, color=31):
+    print(f"\033[{color};1m\n{message}\033[0m\n")
+
 def clean(data_frame):
     df = data_frame.copy()
     df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
@@ -41,7 +44,7 @@ def add_transaction():
         index=False,
         header=not path.exists("budget.csv") or path.getsize("budget.csv") == 0
     )
-    print("Transaction added successfully!")
+    print_message("Transaction added successfully!", 32)
 
 def delete_transaction():
     try:
@@ -50,7 +53,7 @@ def delete_transaction():
         t_id = int(input("Enter transaction id: "))
         df = df.drop(t_id)
         df.to_csv("budget.csv", index=False)
-        print(f"Transaction under ID {t_id} deleted successfully!")
+        print_message(f"Transaction under ID {t_id} deleted successfully!", 32)
     except FileNotFoundError:
         print("File does not exist!")
     except EmptyDataError as e:
@@ -93,13 +96,12 @@ def list_transactions(choice):
         else:
             raise EmptyDataError("No transactions found!")
     except (FileNotFoundError, EmptyDataError) as e:
-        print(e)
+        print_message(e)
         raise SystemExit
 
 def is_expense_series():
     df = load_budget()
     t = df.get("Type", pd.Series(index=df.index, dtype="string")).astype("string").str.casefold()
-    print(t)
     return ~t.eq("income")
 
 def expense_chart():
