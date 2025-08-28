@@ -44,14 +44,20 @@ def add_transaction():
     print("Transaction added successfully!")
 
 def delete_transaction():
-    transac_id = int(input("Enter transaction id: "))
+    raw = pd.read_csv("budget.csv")
+    df = clean(raw)
     try:
-        df = pd.read_csv("budget.csv")
-        df = df.drop(transac_id)
-        df.to_csv("budget.csv", index=False)
-        print("Transaction deleted successfully!")
+        if len(df) > 0:
+            transac_id = int(input("Enter transaction id: "))
+            df = df.drop(transac_id)
+            df.to_csv("budget.csv", index=False)
+            print("Transaction deleted successfully!")
+        else:
+            raise EmptyDataError("No transactions found!")
     except FileNotFoundError:
-        print("Transaction or file does not exist!")
+        print("File does not exist!")
+    except EmptyDataError as e:
+        print(e)
 
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
