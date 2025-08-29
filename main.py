@@ -55,9 +55,9 @@ def delete_transaction():
         df.to_csv("budget.csv", index=False)
         print_message(f"Transaction under ID {t_id} deleted successfully!", 32)
     except FileNotFoundError:
-        print("File does not exist!")
+        print_message("File does not exist!")
     except EmptyDataError as e:
-        print(e)
+        print_message(e)
 
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
@@ -154,7 +154,7 @@ def main():
     menu_options = ["Add Transaction", "Delete Transaction", "List Transactions", "Summarize budget", "Exit"]
     while True:
         try:
-            print("\nPersonal Budget Tracker")
+            print_message("\nPersonal Budget Tracker", 34)
             for i, option in enumerate(menu_options, 1):
                 print(f"{i}. {option}")
             choice = int(input("Choose an option: "))
@@ -167,15 +167,15 @@ def main():
             elif choice == 4:
                 summarize()
             elif choice == 5:
-                print("Program closed.")
+                print_message("Program closed.")
                 break
             else:
-                print("Invalid choice, try again!")
+                print_message("Invalid choice, try again!")
         except KeyboardInterrupt:
-            print("\nProgram stopped by the user.")
+            print_message("\nProgram stopped by the user.")
             break
         except SystemExit as e:
-            print(e)
+            print_message(e)
             break
 
 if __name__ == "__main__":
