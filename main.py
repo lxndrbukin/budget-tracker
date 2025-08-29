@@ -49,7 +49,7 @@ def add_transaction():
 def delete_transaction():
     try:
         df = load_budget()
-        list_transactions(1)
+        list_all_transactions()
         t_id = int(input("Enter transaction id: "))
         df = df.drop(t_id)
         df.to_csv("budget.csv", index=False)
@@ -79,7 +79,17 @@ def print_data_by(selection, data_frame):
     out = data_frame.loc[mask].copy()
     print(out)
 
-def list_transactions(choice):
+def list_all_transactions():
+    try:
+        df = load_budget()
+        if len(df) > 0:
+            print(df.sort_values("Date").dropna())
+        else:
+            raise EmptyDataError("No transactions found!")
+    except (FileNotFoundError, EmptyDataError) as e:
+        print_message(e)
+
+def list_transactions():
     try:
         df = load_budget()
         if len(df) > 0:
@@ -87,6 +97,7 @@ def list_transactions(choice):
             print("List types:")
             for i, option in enumerate(list_options, 1):
                 print(f"{i}. {option}")
+            choice = int(input("Select an option: "))
             if choice == 1:
                 print(df.sort_values("Date").dropna())
             elif choice == 2:
@@ -97,7 +108,6 @@ def list_transactions(choice):
             raise EmptyDataError("No transactions found!")
     except (FileNotFoundError, EmptyDataError) as e:
         print_message(e)
-        raise SystemExit
 
 def is_expense_series():
     df = load_budget()
@@ -153,7 +163,7 @@ def main():
             elif choice == 2:
                 delete_transaction()
             elif choice == 3:
-                list_transactions(choice)
+                list_transactions()
             elif choice == 4:
                 summarize()
             elif choice == 5:
