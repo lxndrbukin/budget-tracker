@@ -29,13 +29,17 @@ def initialize_csv():
         df.to_csv("budget.csv", index=False)
 
 def add_transaction():
-    type_ = input("Enter transaction type (Income or Expense): ")
+    t_type = input("Enter transaction type (Income or Expense): ")
     amount = float(input("Enter the amount of the transaction: "))
-    category = input("Enter the category (e.g. Salary, Entertainment, Freelance, Groceries): ")
+    category_eg = {
+        "income": "Salary, Freelance, Gift",
+        "expense": "Entertainment, Groceries, Subscription"
+    }
+    category = input(f"Enter the category (e.g. {category_eg[t_type.lower()]}): ")
     description = input("Enter transaction description (e.g. Monthly paycheck): ")
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_transaction = pd.DataFrame(
-        [[date, type_, amount, category, description]],
+        [[date, t_type, amount, category, description]],
         columns=["Date", "Type", "Amount", "Category", "Description"]
     )
     new_transaction.to_csv(
