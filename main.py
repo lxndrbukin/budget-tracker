@@ -23,16 +23,17 @@ def load_budget():
     try:
         raw = pd.read_csv("budget.csv")
     except FileNotFoundError:
-        df = pd.DataFrame(columns=["Date","Type","Amount","Category","Description"])
+        df = pd.DataFrame(columns=["ID","Date","Type","Amount","Category","Description"])
         return df
     return clean(raw)
 
 def initialize_csv():
     if not os.path.exists("budget.csv"):
-        df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
+        df = pd.DataFrame(columns=["ID", "Date", "Type", "Amount", "Category", "Description"])
         df.to_csv("budget.csv", index=False)
 
 def add_transaction():
+    df = load_budget()
     t_types = ["Income", "Expense"]
     list_options(t_types)
     t_type = int(input("Select transaction type: "))
@@ -48,9 +49,10 @@ def add_transaction():
     }
     description = input(f"Enter transaction description (e.g. {desc_eg[t_types[t_type - 1].lower()]}): ")
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    t_id =  len(df) + 1
     new_transaction = pd.DataFrame(
-        [[date, t_types[t_type - 1], amount, category, description]],
-        columns=["Date", "Type", "Amount", "Category", "Description"]
+        [[t_id, date, t_types[t_type - 1], amount, category, description]],
+        columns=["ID", "Date", "Type", "Amount", "Category", "Description"]
     )
     new_transaction.to_csv(
         "budget.csv",
@@ -96,7 +98,7 @@ def list_all_transactions():
     try:
         df = load_budget()
         if len(df) > 0:
-            print(df.sort_values("Date").dropna())
+            print(df.sort_values("Date").dropna().set_index("ID"))
         else:
             raise EmptyDataError("No transactions found!")
     except (FileNotFoundError, EmptyDataError) as e:
@@ -111,7 +113,7 @@ def list_transactions():
             list_options(options)
             choice = int(input("Select an option: "))
             if choice == 1:
-                print(df.sort_values("Date").dropna())
+                list_all_transactions()
             elif choice == 2:
                 print_data_by("Type", df)
             elif choice == 3:
