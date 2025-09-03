@@ -1,8 +1,6 @@
 import os
-
 import pandas as pd
 from pandas.errors import EmptyDataError
-from os import path
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -30,7 +28,7 @@ def load_budget():
     return clean(raw)
 
 def initialize_csv():
-    if not path.exists("budget.csv"):
+    if not os.path.exists("budget.csv"):
         df = pd.DataFrame(columns=["Date", "Type", "Amount", "Category", "Description"])
         df.to_csv("budget.csv", index=False)
 
@@ -54,7 +52,7 @@ def add_transaction():
         "budget.csv",
         mode="a",
         index=False,
-        header=not path.exists("budget.csv") or path.getsize("budget.csv") == 0
+        header=not os.path.exists("budget.csv") or os.path.getsize("budget.csv") == 0
     )
     print_message("Transaction added successfully!", 32)
 
@@ -135,7 +133,7 @@ def expense_chart():
     plt.title("Expense Chart")
     plt.xlabel("Type")
     plt.ylabel("Amount")
-    if not path.exists("charts"):
+    if not os.path.exists("charts"):
         os.mkdir("charts")
     plt.savefig("charts/expense_chart.png")
 
