@@ -42,7 +42,11 @@ def add_transaction():
         "expense": "Entertainment, Groceries, Subscription"
     }
     category = input(f"Enter the category (e.g. {category_eg[t_types[t_type - 1].lower()]}): ")
-    description = input("Enter transaction description (e.g. Monthly paycheck): ")
+    desc_eg = {
+        "income": "Monthly paycheck, Gift",
+        "expense": "Food, ChatGPT, TV"
+    }
+    description = input(f"Enter transaction description (e.g. {desc_eg[t_types[t_type - 1].lower()]}): ")
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_transaction = pd.DataFrame(
         [[date, t_types[t_type - 1], amount, category, description]],
@@ -103,7 +107,7 @@ def list_transactions():
         df = load_budget()
         if len(df) > 0:
             options = ["All", "By type", "By category"]
-            print("List types:")
+            print("List transactions:")
             list_options(options)
             choice = int(input("Select an option: "))
             if choice == 1:
