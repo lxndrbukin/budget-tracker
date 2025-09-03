@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from pandas.errors import EmptyDataError
 from os import path
@@ -133,7 +135,9 @@ def expense_chart():
     plt.title("Expense Chart")
     plt.xlabel("Type")
     plt.ylabel("Amount")
-    plt.savefig("expense_chart.png")
+    if not path.exists("charts"):
+        os.mkdir("charts")
+    plt.savefig("charts/expense_chart.png")
 
 def summarize():
     try:
@@ -155,7 +159,7 @@ def summarize():
     print(by_cat.to_string())
     print(f"\nNet: {net:.2f}")
     expense_chart()
-    print("Expenses chart saved in your folder.")
+    print("Expenses chart saved in your 'charts' folder.")
 
 def main():
     initialize_csv()
