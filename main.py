@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 def print_message(message, color=31):
     print(f"\033[{color};1m\n{message}\033[0m\n")
 
+def list_options(options):
+    for i, option in enumerate(options, 1):
+        print(f"{i}. {option}")
+
 def clean(data_frame):
     df = data_frame.copy()
     df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
@@ -29,17 +33,19 @@ def initialize_csv():
         df.to_csv("budget.csv", index=False)
 
 def add_transaction():
-    t_type = input("Enter transaction type (Income or Expense): ")
+    t_types = ["Income", "Expense"]
+    list_options(t_types)
+    t_type = int(input("Select transaction type: "))
     amount = float(input("Enter the amount of the transaction: "))
     category_eg = {
         "income": "Salary, Freelance, Gift",
         "expense": "Entertainment, Groceries, Subscription"
     }
-    category = input(f"Enter the category (e.g. {category_eg[t_type.lower()]}): ")
+    category = input(f"Enter the category (e.g. {category_eg[t_types[t_type - 1].lower()]}): ")
     description = input("Enter transaction description (e.g. Monthly paycheck): ")
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_transaction = pd.DataFrame(
-        [[date, t_type, amount, category, description]],
+        [[date, t_types[t_type - 1], amount, category, description]],
         columns=["Date", "Type", "Amount", "Category", "Description"]
     )
     new_transaction.to_csv(
@@ -75,8 +81,7 @@ def print_data_by(selection, data_frame):
         .tolist()
     )
     print("Select an option:")
-    for i, sel in enumerate(selected, 1):
-        print(f"{i}. {sel}")
+    list_options(selected)
     choice = int(input(f"Select a {selection.lower()}: "))
     category = str(selected[choice - 1])
     mask = data_frame[selection].str.casefold() == category.casefold()
@@ -97,10 +102,9 @@ def list_transactions():
     try:
         df = load_budget()
         if len(df) > 0:
-            list_options = ["All", "By type", "By category"]
+            options = ["All", "By type", "By category"]
             print("List types:")
-            for i, option in enumerate(list_options, 1):
-                print(f"{i}. {option}")
+            list_options(options)
             choice = int(input("Select an option: "))
             if choice == 1:
                 print(df.sort_values("Date").dropna())
@@ -158,9 +162,8 @@ def main():
     menu_options = ["Add Transaction", "Delete Transaction", "List Transactions", "Summarize budget", "Exit"]
     while True:
         try:
-            print_message("\nPersonal Budget Tracker", 34)
-            for i, option in enumerate(menu_options, 1):
-                print(f"{i}. {option}")
+            print_message("Personal Budget Tracker", 34)
+            list_options(menu_options)
             choice = int(input("Choose an option: "))
             if choice == 1:
                 add_transaction()
