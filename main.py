@@ -77,6 +77,21 @@ def delete_transaction():
     except EmptyDataError as e:
         print_message(e)
 
+def edit_transaction():
+    try:
+        df = load_budget()
+        list_all_transactions()
+        t_id = int(input("Enter transaction id: "))
+        selected_row = df.loc[t_id]
+        print_message("Selected transaction:", 32)
+        print(selected_row)
+        columns_list = df.columns.tolist()
+        print_message(f"Select value to update", 34)
+        for i, column in enumerate(columns_list, 1):
+            print(f"{i}. {column}")
+    except FileNotFoundError:
+        print_message("File does not exist!")
+
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
         print("Can only filter by 'Type' or 'Category'.")
@@ -159,17 +174,17 @@ def summarize():
     income_total = by_type.get("Income", 0.0)
     expense_total = expenses["Amount"].sum()
     net = income_total - expense_total
-    print("\nTotals by Type")
+    print_message("Totals by Type", 34)
     print(by_type.to_string())
-    print("\nTotals by Category (expenses)")
+    print_message("Totals by Category (expenses)", 34)
     print(by_cat.to_string())
-    print(f"\nNet: {net:.2f}")
+    print_message(f"Net: {net:.2f}", 34)
     expense_chart()
-    print("Expenses chart saved in your 'charts' folder.")
+    print_message("Expenses chart saved in your 'charts' folder.",32)
 
 def main():
     initialize_csv()
-    menu_options = ["Add Transaction", "Delete Transaction", "List Transactions", "Summarize budget", "Exit"]
+    menu_options = ["Add Transaction", "Delete Transaction", "Edit Transaction", "List Transactions", "Summarize budget", "Exit"]
     while True:
         try:
             print_message("Personal Budget Tracker", 34)
@@ -180,6 +195,8 @@ def main():
             elif choice == 2:
                 delete_transaction()
             elif choice == 3:
+                edit_transaction()
+            elif choice == 4:
                 list_transactions()
             elif choice == 4:
                 summarize()
@@ -191,6 +208,8 @@ def main():
         except KeyboardInterrupt:
             print_message("\nProgram stopped by the user.")
             break
+        except ValueError:
+            print_message("Invalid choice, try again!")
         except SystemExit as e:
             print_message(e)
             break
