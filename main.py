@@ -22,8 +22,10 @@ def clean(data_frame):
 def load_budget():
     try:
         raw = pd.read_csv("budget.csv")
+        raw = raw.set_index("ID")
     except FileNotFoundError:
         df = pd.DataFrame(columns=["ID","Date","Type","Amount","Category","Description"])
+        df = df.set_index("ID")
         return df
     return clean(raw)
 
@@ -68,7 +70,7 @@ def delete_transaction():
         list_all_transactions()
         t_id = int(input("Enter transaction id: "))
         df = df.drop(t_id)
-        df.to_csv("budget.csv", index=False)
+        df.to_csv("budget.csv")
         print_message(f"Transaction under ID {t_id} deleted successfully!", 32)
     except FileNotFoundError:
         print_message("File does not exist!")
@@ -98,7 +100,7 @@ def list_all_transactions():
     try:
         df = load_budget()
         if len(df) > 0:
-            print(df.sort_values("Date").dropna().set_index("ID"))
+            print(df.sort_values("Date").dropna())
         else:
             raise EmptyDataError("No transactions found!")
     except (FileNotFoundError, EmptyDataError) as e:
