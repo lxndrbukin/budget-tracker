@@ -86,11 +86,18 @@ def edit_transaction():
         print_message("Selected transaction:", 32)
         print(selected_row)
         columns_list = df.columns.tolist()
-        print_message(f"Select value to update", 34)
+        print_message(f"Values to update:", 34)
         for i, column in enumerate(columns_list, 1):
             print(f"{i}. {column}")
+        option = int(input("Select an option: "))
+        new_value = input(f"Enter the new {columns_list[option - 1]} value: ")
+        df.loc[t_id, columns_list[option - 1]] = new_value
+        df.to_csv("budget.csv")
+        print_message(f"Transaction updated successfully!", 32)
     except FileNotFoundError:
         print_message("File does not exist!")
+    except ValueError as e:
+        print_message(e)
 
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
