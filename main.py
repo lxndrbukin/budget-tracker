@@ -205,9 +205,9 @@ def main():
                 edit_transaction()
             elif choice == 4:
                 list_transactions()
-            elif choice == 4:
-                summarize()
             elif choice == 5:
+                summarize()
+            elif choice == 6:
                 print_message("Program closed.")
                 break
             else:
