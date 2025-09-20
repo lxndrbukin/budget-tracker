@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 from datetime import datetime
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 def print_message(message, color=31):
     print(f"\033[{color};1m\n{message}\033[0m\n")
@@ -63,6 +64,7 @@ def add_transaction():
         header=not os.path.exists("budget.csv") or os.path.getsize("budget.csv") == 0
     )
     print_message("Transaction added successfully!", 32)
+    print(tabulate(new_transaction.set_index("ID"), headers="keys", tablefmt="pretty"))
 
 def delete_transaction():
     try:
@@ -91,7 +93,10 @@ def edit_transaction():
             print(f"{i}. {column}")
         option = int(input("Select an option: "))
         new_value = input(f"Enter the new {columns_list[option - 1]} value: ")
-        df.loc[t_id, columns_list[option - 1]] = new_value
+        if type(columns_list[option - 1]) is not str:
+            df.loc[t_id, columns_list[option - 1]] = float(new_value)
+        else:
+            df.loc[t_id, columns_list[option - 1]] = new_value
         df.to_csv("budget.csv")
         print_message(f"Transaction updated successfully!", 32)
     except FileNotFoundError:
@@ -122,7 +127,7 @@ def list_all_transactions():
     try:
         df = load_budget()
         if len(df) > 0:
-            print(df.sort_values("Date").dropna())
+            print(tabulate(df.sort_values("Date").dropna(), headers="keys", tablefmt="pretty"))
         else:
             raise EmptyDataError("No transactions found!")
     except (FileNotFoundError, EmptyDataError) as e:
