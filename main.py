@@ -41,7 +41,16 @@ class BudgetTracker:
         try:
             df = self.fetch_data()
             if len(df) > 0:
-                print(tabulate(df.sort_values("Date").dropna(), headers="keys", tablefmt="pretty"))
+                options = ["All", "By type", "By category"]
+                print("List transactions:")
+                self.list_options(options)
+                choice = int(input("Select an option: "))
+                if choice == 1:
+                    print(tabulate(df.sort_values("Date").dropna(), headers="keys", tablefmt="pretty"))
+                elif choice == 2:
+                    self.print_data_by("Type", df)
+                elif choice == 3:
+                    self.print_data_by("Category", df)
             else:
                 raise EmptyDataError("No transactions found!")
         except (FileNotFoundError, EmptyDataError) as e:
@@ -116,6 +125,25 @@ class BudgetTracker:
         except EmptyDataError as e:
             self.print_message(e)
 
+    def print_data_by(self, selection, data_frame):
+        if selection not in ("Type", "Category"):
+            print("Can only filter by 'Type' or 'Category'.")
+            return
+        selected = (
+            self.clean_data(data_frame).assign(Category=lambda d: d[selection])
+            .dropna(subset=[selection])
+            [selection].drop_duplicates()
+            .sort_values()
+            .tolist()
+        )
+        print("Select an option:")
+        self.list_options(selected)
+        choice = int(input(f"Select a {selection.lower()}: "))
+        category = str(selected[choice - 1])
+        mask = data_frame[selection].str.casefold() == category.casefold()
+        out = data_frame.loc[mask].copy()
+        print(out)
+
     @staticmethod
     def print_message(message, color=31):
         print(f"\033[{color};1m\n{message}\033[0m\n")
@@ -128,119 +156,79 @@ class BudgetTracker:
 
 ###### OLD CODE ######
 
-def print_data_by(selection, data_frame):
-    if selection not in ("Type", "Category"):
-        print("Can only filter by 'Type' or 'Category'.")
-        return
-    selected = (
-        clean(data_frame).assign(Category=lambda d: d[selection])
-        .dropna(subset=[selection])
-        [selection].drop_duplicates()
-        .sort_values()
-        .tolist()
-    )
-    print("Select an option:")
-    list_options(selected)
-    choice = int(input(f"Select a {selection.lower()}: "))
-    category = str(selected[choice - 1])
-    mask = data_frame[selection].str.casefold() == category.casefold()
-    out = data_frame.loc[mask].copy()
-    print(out)
+# def is_expense_series():
+#     df = load_budget()
+#     t = df.get("Type", pd.Series(index=df.index, dtype="string")).astype("string").str.casefold()
+#     return ~t.eq("income")
 
+# def expense_chart():
+#     df = load_budget()
+#     is_expense = df["Type"].str.casefold().ne("income")
+#     by_cat = (df.loc[is_expense]
+#               .groupby("Description")["Amount"]
+#               .sum()
+#               .sort_values(ascending=False))
+#     plt.bar(by_cat.index.tolist(), by_cat.values.tolist())
+#     plt.title("Expense Chart")
+#     plt.xlabel("Type")
+#     plt.ylabel("Amount")
+#     if not os.path.exists("charts"):
+#         os.mkdir("charts")
+#     plt.savefig("charts/expense_chart.png")
 
+# def summarize():
+#     try:
+#         df = load_budget()
+#     except (FileNotFoundError, EmptyDataError):
+#         print("No transactions yet.")
+#         raise SystemExit
+#     by_type = (df.groupby("Type", dropna=True)["Amount"].sum()
+#                  .sort_values(ascending=False))
+#     expenses = df.loc[is_expense_series()]
+#     by_cat = (expenses.groupby("Category", dropna=True)["Amount"].sum()
+#                 .sort_values(ascending=False))
+#     income_total = by_type.get("Income", 0.0)
+#     expense_total = expenses["Amount"].sum()
+#     net = income_total - expense_total
+#     print_message("Totals by Type", 34)
+#     print(by_type.to_string())
+#     print_message("Totals by Category (expenses)", 34)
+#     print(by_cat.to_string())
+#     print_message(f"Net: {net:.2f}", 34)
+#     expense_chart()
+#     print_message("Expenses chart saved in your 'charts' folder.",32)
 
-def list_transactions():
-    try:
-        df = load_budget()
-        if len(df) > 0:
-            options = ["All", "By type", "By category"]
-            print("List transactions:")
-            list_options(options)
-            choice = int(input("Select an option: "))
-            if choice == 1:
-                list_all_transactions()
-            elif choice == 2:
-                print_data_by("Type", df)
-            elif choice == 3:
-                print_data_by("Category", df)
-        else:
-            raise EmptyDataError("No transactions found!")
-    except (FileNotFoundError, EmptyDataError) as e:
-        print_message(e)
+# def main():
+#     initialize_csv()
+#     menu_options = ["Add Transaction", "Delete Transaction", "Edit Transaction", "List Transactions", "Summarize budget", "Exit"]
+#     while True:
+#         try:
+#             print_message("Personal Budget Tracker", 34)
+#             list_options(menu_options)
+#             choice = int(input("Choose an option: "))
+#             if choice == 1:
+#                 add_transaction()
+#             elif choice == 2:
+#                 delete_transaction()
+#             elif choice == 3:
+#                 edit_transaction()
+#             elif choice == 4:
+#                 list_transactions()
+#             elif choice == 5:
+#                 summarize()
+#             elif choice == 6:
+#                 print_message("Program closed.")
+#                 break
+#             else:
+#                 print_message("Invalid choice, try again!")
+#         except KeyboardInterrupt:
+#             print_message("\nProgram stopped by the user.")
+#             break
+#         except ValueError:
+#             print_message("Invalid choice, try again!")
+#         except SystemExit as e:
+#             print_message(e)
+#             break
 
-def is_expense_series():
-    df = load_budget()
-    t = df.get("Type", pd.Series(index=df.index, dtype="string")).astype("string").str.casefold()
-    return ~t.eq("income")
-
-def expense_chart():
-    df = load_budget()
-    is_expense = df["Type"].str.casefold().ne("income")
-    by_cat = (df.loc[is_expense]
-              .groupby("Description")["Amount"]
-              .sum()
-              .sort_values(ascending=False))
-    plt.bar(by_cat.index.tolist(), by_cat.values.tolist())
-    plt.title("Expense Chart")
-    plt.xlabel("Type")
-    plt.ylabel("Amount")
-    if not os.path.exists("charts"):
-        os.mkdir("charts")
-    plt.savefig("charts/expense_chart.png")
-
-def summarize():
-    try:
-        df = load_budget()
-    except (FileNotFoundError, EmptyDataError):
-        print("No transactions yet.")
-        raise SystemExit
-    by_type = (df.groupby("Type", dropna=True)["Amount"].sum()
-                 .sort_values(ascending=False))
-    expenses = df.loc[is_expense_series()]
-    by_cat = (expenses.groupby("Category", dropna=True)["Amount"].sum()
-                .sort_values(ascending=False))
-    income_total = by_type.get("Income", 0.0)
-    expense_total = expenses["Amount"].sum()
-    net = income_total - expense_total
-    print_message("Totals by Type", 34)
-    print(by_type.to_string())
-    print_message("Totals by Category (expenses)", 34)
-    print(by_cat.to_string())
-    print_message(f"Net: {net:.2f}", 34)
-    expense_chart()
-    print_message("Expenses chart saved in your 'charts' folder.",32)
-
-def main():
-    initialize_csv()
-    menu_options = ["Add Transaction", "Delete Transaction", "Edit Transaction", "List Transactions", "Summarize budget", "Exit"]
-    while True:
-        try:
-            print_message("Personal Budget Tracker", 34)
-            list_options(menu_options)
-            choice = int(input("Choose an option: "))
-            if choice == 1:
-                add_transaction()
-            elif choice == 2:
-                delete_transaction()
-            elif choice == 3:
-                edit_transaction()
-            elif choice == 4:
-                list_transactions()
-            elif choice == 5:
-                summarize()
-            elif choice == 6:
-                print_message("Program closed.")
-                break
-            else:
-                print_message("Invalid choice, try again!")
-        except KeyboardInterrupt:
-            print_message("\nProgram stopped by the user.")
-            break
-        except ValueError:
-            print_message("Invalid choice, try again!")
-        except SystemExit as e:
-            print_message(e)
-            break
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
