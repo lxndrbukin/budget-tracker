@@ -5,104 +5,128 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 
-def print_message(message, color=31):
-    print(f"\033[{color};1m\n{message}\033[0m\n")
+class BudgetTracker:
+    def __init__(self, columns=["ID","Date","Type","Amount","Category","Description"], file_path=os.path(__file__, 'budget.csv')):
+        self.columns = columns
+        self.file_path = file_path
 
-def list_options(options):
-    for i, option in enumerate(options, 1):
-        print(f"{i}. {option}")
-
-def clean(data_frame):
-    df = data_frame.copy()
-    df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    for c in ["Type","Category","Description"]:
-        df[c] = df[c].astype("string").str.strip()
-    return df
-
-def load_budget():
-    try:
-        raw = pd.read_csv("budget.csv")
-        raw = raw.set_index("ID")
-    except FileNotFoundError:
-        df = pd.DataFrame(columns=["ID","Date","Type","Amount","Category","Description"])
-        df = df.set_index("ID")
+    def clean_data(self, data_frame):
+        df = data_frame.copy()
+        df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        for c in ["Type","Category","Description"]:
+            df[c] = df[c].astype("string").str.strip()
         return df
-    return clean(raw)
 
-def initialize_csv():
-    if not os.path.exists("budget.csv"):
-        df = pd.DataFrame(columns=["ID", "Date", "Type", "Amount", "Category", "Description"])
-        df.to_csv("budget.csv", index=False)
+    @staticmethod
+    def create_df(columns):
+        return pd.DataFrame(columns=columns)
 
-def add_transaction():
-    df = load_budget()
-    t_types = ["Income", "Expense"]
-    list_options(t_types)
-    t_type = int(input("Select transaction type: "))
-    amount = float(input("Enter the amount of the transaction: "))
-    category_eg = {
-        "income": "Salary, Freelance, Gift",
-        "expense": "Entertainment, Groceries, Subscription"
-    }
-    category = input(f"Enter the category (e.g. {category_eg[t_types[t_type - 1].lower()]}): ")
-    desc_eg = {
-        "income": "Monthly paycheck, Gift",
-        "expense": "Food, ChatGPT, TV"
-    }
-    description = input(f"Enter transaction description (e.g. {desc_eg[t_types[t_type - 1].lower()]}): ")
-    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    t_id =  len(df) + 1
-    new_transaction = pd.DataFrame(
-        [[t_id, date, t_types[t_type - 1], amount, category, description]],
-        columns=["ID", "Date", "Type", "Amount", "Category", "Description"]
-    )
-    new_transaction.to_csv(
-        "budget.csv",
-        mode="a",
-        index=False,
-        header=not os.path.exists("budget.csv") or os.path.getsize("budget.csv") == 0
-    )
-    print_message("Transaction added successfully!", 32)
-    print(tabulate(new_transaction.set_index("ID"), headers="keys", tablefmt="pretty"))
+    def fetch_data(self):
+        try:
+            raw = pd.read_csv(self.file_path)
+            raw = raw.set_index("ID")
+        except FileNotFoundError:
+            df = self.create_df(self.columns)
+            df = df.set_index("ID")
+            return df
+        return self.clean_data(raw)
+    
+    def initialize_csv(self):
+        if not os.path.exists(self.file_path):
+            df = self.create_df(self.columns)
+            df.to_csv(self.file_path, index=False)
 
-def delete_transaction():
-    try:
-        df = load_budget()
-        list_all_transactions()
-        t_id = int(input("Enter transaction id: "))
-        df = df.drop(t_id)
-        df.to_csv("budget.csv")
-        print_message(f"Transaction under ID {t_id} deleted successfully!", 32)
-    except FileNotFoundError:
-        print_message("File does not exist!")
-    except EmptyDataError as e:
-        print_message(e)
+    def list_transactions(self):
+        try:
+            df = self.fetch_data()
+            if len(df) > 0:
+                print(tabulate(df.sort_values("Date").dropna(), headers="keys", tablefmt="pretty"))
+            else:
+                raise EmptyDataError("No transactions found!")
+        except (FileNotFoundError, EmptyDataError) as e:
+            self.print_message(e)
 
-def edit_transaction():
-    try:
-        df = load_budget()
-        list_all_transactions()
-        t_id = int(input("Enter transaction id: "))
-        selected_row = df.loc[t_id]
-        print_message("Selected transaction:", 32)
-        print(selected_row)
-        columns_list = df.columns.tolist()
-        print_message(f"Values to update:", 34)
-        for i, column in enumerate(columns_list, 1):
-            print(f"{i}. {column}")
-        option = int(input("Select an option: "))
-        new_value = input(f"Enter the new {columns_list[option - 1]} value: ")
-        if type(columns_list[option - 1]) is not str:
-            df.loc[t_id, columns_list[option - 1]] = float(new_value)
-        else:
-            df.loc[t_id, columns_list[option - 1]] = new_value
-        df.to_csv("budget.csv")
-        print_message(f"Transaction updated successfully!", 32)
-    except FileNotFoundError:
-        print_message("File does not exist!")
-    except ValueError as e:
-        print_message(e)
+    def add_transaction(self):
+        df = self.fetch_data()
+        t_types = ["Income", "Expense"]
+        self.list_options(t_types)
+        t_type = int(input("Select transaction type: "))
+        amount = float(input("Enter the amount of the transaction: "))
+        category_eg = {
+            "income": "Salary, Freelance, Gift",
+            "expense": "Entertainment, Groceries, Subscription"
+        }
+        category = input(f"Enter the category (e.g. {category_eg[t_types[t_type - 1].lower()]}): ")
+        desc_eg = {
+            "income": "Monthly paycheck, Gift",
+            "expense": "Food, ChatGPT, TV"
+        }
+        description = input(f"Enter transaction description (e.g. {desc_eg[t_types[t_type - 1].lower()]}): ")
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        t_id =  len(df) + 1
+        new_transaction = pd.DataFrame(
+            [[t_id, date, t_types[t_type - 1], amount, category, description]],
+            columns=["ID", "Date", "Type", "Amount", "Category", "Description"]
+        )
+        new_transaction.to_csv(
+            "budget.csv",
+            mode="a",
+            index=False,
+            header=not os.path.exists("budget.csv") or os.path.getsize("budget.csv") == 0
+        )
+        self.print_message("Transaction added successfully!", 32)
+        print(tabulate(new_transaction.set_index("ID"), headers="keys", tablefmt="pretty"))
+
+    def edit_transaction(self):
+        try:
+            df = self.fetch_data()
+            self.list_transactions()
+            t_id = int(input("Enter transaction id: "))
+            selected_row = df.loc[t_id]
+            self.print_message("Selected transaction:", 32)
+            print(selected_row)
+            columns_list = df.columns.tolist()
+            self.print_message(f"Values to update:", 34)
+            for i, column in enumerate(columns_list, 1):
+                print(f"{i}. {column}")
+            option = int(input("Select an option: "))
+            new_value = input(f"Enter the new {columns_list[option - 1]} value: ")
+            if type(columns_list[option - 1]) is not str:
+                df.loc[t_id, columns_list[option - 1]] = float(new_value)
+            else:
+                df.loc[t_id, columns_list[option - 1]] = new_value
+            df.to_csv("budget.csv")
+            self.print_message(f"Transaction updated successfully!", 32)
+        except FileNotFoundError:
+            self.print_message("File does not exist!")
+        except ValueError as e:
+            self.print_message(e)
+
+    def delete_transaction(self):
+        try:
+            df = self.fetch_data()
+            self.list_transactions()
+            t_id = int(input("Enter transaction id: "))
+            df = df.drop(t_id)
+            df.to_csv("budget.csv")
+            self.print_message(f"Transaction under ID {t_id} deleted successfully!", 32)
+        except FileNotFoundError:
+            self.print_message("File does not exist!")
+        except EmptyDataError as e:
+            self.print_message(e)
+
+    @staticmethod
+    def print_message(message, color=31):
+        print(f"\033[{color};1m\n{message}\033[0m\n")
+
+    @staticmethod
+    def list_options(options):
+        for i, option in enumerate(options, 1):
+            print(f"{i}. {option}")
+
+
+###### OLD CODE ######
 
 def print_data_by(selection, data_frame):
     if selection not in ("Type", "Category"):
@@ -123,15 +147,7 @@ def print_data_by(selection, data_frame):
     out = data_frame.loc[mask].copy()
     print(out)
 
-def list_all_transactions():
-    try:
-        df = load_budget()
-        if len(df) > 0:
-            print(tabulate(df.sort_values("Date").dropna(), headers="keys", tablefmt="pretty"))
-        else:
-            raise EmptyDataError("No transactions found!")
-    except (FileNotFoundError, EmptyDataError) as e:
-        print_message(e)
+
 
 def list_transactions():
     try:
